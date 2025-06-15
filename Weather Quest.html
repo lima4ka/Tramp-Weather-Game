@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Карта истории</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Handjet:wght@100..900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    #mapContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .map-inner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 1540px;
+      height: 1000px;
+      background: url("https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/картата.jpg") center center / cover no-repeat;
+    }
+
+    .scene-container {
+      position: absolute;
+      z-index: 10;
+    }
+
+    .scene-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #002782;
+      border: 2px solid #fff;
+      cursor: pointer;
+      z-index: 20;
+      position: relative;
+    }
+
+    .scene-button:hover {
+      background: #0aa;
+    }
+
+    .preview {
+      position: absolute;
+      width: 870px;
+      height: 330px;
+      background-size: cover;
+      background-position: center;
+      z-index: 30;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      pointer-events: none;
+    }
+
+    .preview.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    #sceneModal .bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.5);
+      z-index: -1;
+    }
+
+    #sceneText,
+    #sceneText1,
+    #sceneText2,
+    #sceneText3,
+    #sceneText4,
+    #sceneText5 {
+      position: absolute;
+      font-size: 28px;
+      max-width: 600px;
+      z-index: 10000;
+    }
+
+    #sceneModal {
+      opacity: 0;
+      transform: scale(0.95);
+      pointer-events: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.95);
+      color: white;
+      font-size: 1.4em;
+      text-align: center;
+      padding: 40px 20px;
+      box-sizing: border-box;
+      z-index: 1000;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    #sceneModal.show {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .handjet-text {
+      font-family: "Handjet", sans-serif;
+      font-optical-sizing: auto;
+      font-weight: 530;
+      font-style: normal;
+      font-variation-settings:
+        "ELGR" 10,
+        "ELSH" 10;
+    }
+
+    .scene-image {
+      position: fixed;
+      width: 1627.6px;
+      height: auto;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #img1 {
+      bottom: -12%;
+      right: 2%;
+      transition: transform 1s ease, opacity 1s ease;
+    }
+
+    #img2 {
+      top: 4%;
+      right: -6%;
+      transition: transform 1s ease, opacity 1s ease;
+    }
+
+    #img3 {
+      bottom: -2%;
+      left: -4%;
+      z-index: 34;
+      transition: transform 1s ease, opacity 1s ease;
+    }
+
+    #img4 {
+      bottom: -1%;
+      right: -5%;
+    }
+
+    @keyframes floatArc {
+      0% {
+        opacity: 0;
+        transform: translate(0, 100px) rotate(0deg);
+      }
+
+      50% {
+        opacity: 1;
+        transform: translate(50px, 0) rotate(10deg);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translate(100px, -100px) rotate(0deg);
+      }
+    }
+
+    #img1.show {
+      animation: floatArc 5s ease-out forwards;
+    }
+
+    @keyframes rocketFly {
+      0% {
+        opacity: 0;
+        transform: translateX(40px) translateY(0) rotate(0deg);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateX(0px) translateY(0) rotate(0deg);
+      }
+    }
+
+    /* Привязываем анимацию */
+    #img2.fly {
+      animation: rocketFly 5s ease-out forwards;
+    }
+
+    /* 2) Привязываем анимацию к появлению #img2 */
+    #img2 {
+      position: fixed;
+      width: 1390px;
+      bottom: 10%;
+      right: 4%;
+      transform: none;
+      opacity: 0;
+    }
+
+    @keyframes glowArc {
+      0% {
+        opacity: 0;
+        transform: translate(0, 80px) scale(0.7) rotate(-10deg);
+      }
+
+      50% {
+        opacity: 1;
+        transform: translate(20px, -20px) scale(1) rotate(0deg);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translate(40px, -60px) scale(1.05) rotate(0deg);
+      }
+    }
+
+    #img3.glow {
+      animation: glowArc 4s ease-out forwards;
+    }
+
+    /* новые астронавты и котвнебе */
+    #img5,
+    #img6,
+    #img7,
+    #img8,
+    #img9 {
+      position: fixed;
+      width: 1500px;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 1s ease;
+      pointer-events: none;
+    }
+
+    #img5 {
+      left: 10%;
+      top: 17%;
+    }
+
+    .scene-image.show {
+      opacity: 1;
+    }
+
+    @keyframes slideUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInLeft {
+      0% {
+        opacity: 0;
+        transform: translateX(-50px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInRight {
+      0% {
+        opacity: 0;
+        transform: translateX(50px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideInTop {
+      0% {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideInBottom {
+      0% {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+
+    /* img5 появляется первым */
+    #img5.show {
+      opacity: 1;
+      animation: slideUp 1.5s ease-out forwards;
+      /* было 3s → стало 2s */
+    }
+
+    /* img6 появляется слева и замирает */
+    #img6.show {
+      animation:
+        slideInLeft 2s ease-out forwards 0s;
+      /* только появление */
+    }
+
+    /* img7 появляется справа и замирает */
+    #img7.show {
+      animation:
+        slideInRight 2s ease-out forwards 1s;
+      /* только появление */
+    }
+
+    /* img8 появляется сверху и замирает */
+    #img8.show {
+      animation:
+        slideInTop 2s ease-out forwards 2s;
+      /* только появление */
+    }
+
+    /* img9 появляется снизу и продолжает извиваться */
+    #img9.show {
+      animation:
+        slideInBottom 2s ease-out forwards 3s,
+        /* появление */
+        wiggle9 7s ease-in-out 5s infinite;
+      /* бесконечное «гусеница» */
+    }
+
+    @keyframes sway5 {
+      0% {
+        transform: rotate(-3deg);
+      }
+
+      50% {
+        transform: rotate(3deg);
+      }
+
+      100% {
+        transform: rotate(-3deg);
+      }
+    }
+
+    @keyframes sway6 {
+      0% {
+        transform: rotate(2deg);
+      }
+
+      50% {
+        transform: rotate(-2deg);
+      }
+
+      100% {
+        transform: rotate(2deg);
+      }
+    }
+
+    @keyframes sway7 {
+      0% {
+        transform: rotate(-4deg);
+      }
+
+      50% {
+        transform: rotate(4deg);
+      }
+
+      100% {
+        transform: rotate(-4deg);
+      }
+    }
+
+    @keyframes sway8 {
+      0% {
+        transform: rotate(1deg);
+      }
+
+      50% {
+        transform: rotate(-1deg);
+      }
+
+      100% {
+        transform: rotate(1deg);
+      }
+    }
+
+    @keyframes wiggle9 {
+      0% {
+        transform: translateX(0) rotate(0deg);
+      }
+
+      20% {
+        transform: translateX(8px) rotate(8deg);
+      }
+
+      40% {
+        transform: translateX(0) rotate(0deg);
+      }
+
+      60% {
+        transform: translateX(-8px) rotate(-8deg);
+      }
+
+      80% {
+        transform: translateX(0) rotate(0deg);
+      }
+
+      100% {
+        transform: translateX(0) rotate(0deg);
+      }
+    }
+
+    /* у нас уже есть .scene-image, так что задаём только специфичное для img10 */
+    #img10 {
+      width: 1403px;
+      height: 719px;
+      left: 115%;
+      top: -9%;
+      transform-origin: center center;
+      opacity: 0;
+    }
+
+    @keyframes spin {
+      from {
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+
+      to {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    /* когда показываем картинку — запускаем анимацию */
+    #img10.show {
+      opacity: 1;
+      animation: spin 10s linear infinite;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="mapContainer">
+    <div class="map-inner" id="mapInner"></div>
+  </div>
+
+
+  <div id="sceneModal">
+    <div class="bg"></div>
+    <img class="scene-image" id="img1"
+      src="https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/котшок.png">
+    <img class="scene-image" id="img2"
+      src="https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/ракета.png">
+    <img class="scene-image" id="img3" src="https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/блик.png">
+    <img class="scene-image" id="img4"
+      src="https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/кружок.png">
+    <div class="text handjet-text" id="sceneText"></div>
+    <div class="text handjet-text" id="sceneText1"></div>
+    <div class="text handjet-text" id="sceneText2"></div>
+    <div class="text handjet-text" id="sceneText3"></div>
+    <div class="text handjet-text" id="sceneText4"></div>
+    <div class="text handjet-text" id="sceneText5"></div>
+    <img class="scene-image" id="img5"
+      src="https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/космонавт1.png">
+    <img class="scene-image" id="img6"
+      src="https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/космонавт2.png">
+    <img class="scene-image" id="img7"
+      src="https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/космонавт3.png">
+    <img class="scene-image" id="img8"
+      src="https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/космонавт4.png">
+    <img class="scene-image" id="img9"
+      src="https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/котвнебе.png">
+    <img class="scene-image" id="img10"
+      src="https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/лунааа.png">
+  </div>
+
+  <script>
+    const mapContainer = document.getElementById('mapContainer');
+    const sceneModal = document.getElementById('sceneModal');
+    const sceneText = document.getElementById('sceneText');
+    const sceneBg = sceneModal.querySelector('.bg');
+
+    const scenes = [
+      {
+        x: 360,
+        y: 437,
+        previewX: -233,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг8.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/фон1.jpg',
+        text1X: '710px',
+        text1Y: '58px',
+        text1: 'Экипаж прибыл на эту планету, чтобы провести здесь несколько месяцев вдали от Земли. Их сердца сжимаются от волнения, ведь каждый шаг напоминает им о том, что они — первые странники, прикоснувшиеся к этой неизведанной земле. И пока их взгляд и движения адаптируются к новому миру, они понимают: их души уже изменились, став частью этого места.',
+        text1MaxWidth: '800px'
+      },
+      {
+        x: 157,
+        y: 567,
+        previewX: -220.5,
+        previewY: -133,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг12.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/фон2.jpg',
+        text1: 'Наша команда из восьми новичков, успевших освоить азы космонавтики, уже на орбите. Они не знают, как управлять кораблём, но должны быть уверены, что главное — не паниковать и не нажимать на красные кнопки. Пусть подготовятся к неожиданным открытиям, случайным активациям системы самоуничтожения и, возможно, к тому, что станут первыми, кто по‑настоящему освоит эту планету.',
+        text1X: '814px',
+        text1Y: '51px',
+        text1MaxWidth: '673px'
+      },
+      {
+        x: 161,
+        y: 761,
+        previewX: -232,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг3.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/ура.jpg',
+        text1: '— Кто ты такой? Ты странный… но жёлтый. Мне нравится жёлтый цвет. Ты вызываешь желание тебя потрогать.',
+        text1X: '120px',
+        text1Y: '38px',
+        text1Color: 'darkviolet',
+        text1MaxWidth: '428px',
+        text2: '— Хочешь, чтобы я изменил твою жизнь? Через три дня ты себя не узнаешь. Я научу тебя телепатии и чувству стиля… Хотя, наверное, с этим нужно родиться — судя по твоей одежде. Хочешь, я покажу тебе гриб? Я только что его сфоткал.',
+        text2X: '750px',
+        text2Y: '38px',
+        text2Color: 'gold',
+        text2MaxWidth: '678px',
+        text3: 'Не прошло и двух дней, как один из космонавтов встретил ЕГО. Он выглядел слишком живым — в отличие от планеты.',
+        text3X: '550px',
+        text3Y: '688px',
+        text3Color: 'burlywood;',
+        text3MaxWidth: '748px',
+      },
+      {
+        x: 261,
+        y: 681,
+        previewX: -232,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круггриб.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/грибыы.jpg',
+      },
+      {
+        x: 372,
+        y: 765,
+        previewX: -220,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг4.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/сидяттт.jpg',
+        text1: '— Ты опять в шлеме? Тебе там удобно?',
+        text1X: '240px',
+        text1Y: '148px',
+        text1Color: 'gold',
+        text1MaxWidth: '428px',
+        text2: '— Конечно, а ты не завидуй — у меня встроенный фильтр плохих мыслей.',
+        text2X: '876px',
+        text2Y: '188px',
+        text2Color: 'darkviolet',
+        text2MaxWidth: '428px',
+        text3: 'Каждую ночь они сидели на краю планеты. Молча, но очень громко — их разговор был телепатическим. Инопланетянин знал о ракетах всё, и с серьёзным видом пытался вложить эти знания в голову космонавта. Главное — чтобы тот не взорвался раньше, чем долетит обратно на Землю.',
+        text3X: '255px',
+        text3Y: '28px',
+        text3Color: 'burlywood;',
+        text3MaxWidth: '998px',
+        text4: '— Пожалуй, он мне тоже нужен... Особенно когда думаю о том, как спасти твоё будущее.',
+        text4X: '210px',
+        text4Y: '275px',
+        text4Color: 'gold',
+        text4MaxWidth: '478px',
+        text5: '— Не переживай — я тоже не знаю, как его спасти.',
+        text5X: '862px',
+        text5Y: '348px',
+        text5Color: 'darkviolet',
+        text5MaxWidth: '678px',
+      },
+      {
+        x: 595.9,
+        y: 723,
+        previewX: -229,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг2.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/шахмат.jpg',
+        text1: '— Ладья на F7. Конь на G5. Мат в три хода. Хочешь сыграть в слепую?',
+        text1X: '-13px',
+        text1Y: '119px',
+        text1Color: 'mediumturquoise',
+        text1MaxWidth: '278px',
+        text2: '— Ты дурак?',
+        text2X: '1256px',
+        text2Y: '218px',
+        text2Color: 'gold',
+        text2MaxWidth: '428px',
+        text3: 'Шестнадцатый день на чужой планете. У кого-то началась тоска, у кого-то философия... А у них — шахматы. С инопланетянином. В слепую. Телепатически. Гениальная идея… почти. Так родилась межпланетная школа антишахмат. Правил нет. Побеждает тот, кто смеётся последним — обычно это инопланетянин.',
+        text3X: '255px',
+        text3Y: '28px',
+        text3Color: 'mistyrose',
+        text3MaxWidth: '1049px',
+        text4: '— Почему?',
+        text4X: '40px',
+        text4Y: '275px',
+        text4Color: 'mediumturquoise',
+        text4MaxWidth: '478px',
+        text5: '— Я не умею играть. И даже не думаю над партией. Я просто двигаю красивые фигурки и наслаждаюсь хаосом.',
+        text5X: '1182px',
+        text5Y: '348px',
+        text5Color: 'gold',
+        text5MaxWidth: '348px',
+        text6: '— …гениально. Хочешь быть моим тренером?',
+        text6X: '-8px',
+        text6Y: '448px',
+        text6Color: 'mediumturquoise',
+        text6MaxWidth: '248px',
+      },
+      {
+        x: 800,
+        y: 654,
+        previewX: -221,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг11.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/кастер.png',
+        text1: 'Это был двадцать какой-то день на планете. Солнечный, если бы тут было солнце. Космонавт, как обычно, сидел на краю кратера, разглядывая горизонты, которых не существует, и пытался молчать телепатически — не всегда получалось.',
+        text1X: '170px',
+        text1Y: '28px',
+        text1Color: 'mistyrose',
+        text1MaxWidth: '1197px',
+        text2: '— Тебе нужно снять шлем. Если ты его не снимешь — мы не сможем продолжать. Тебе будет проще, если ты останешься в этом мире.',
+        text2X: '566px',
+        text2Y: '218px',
+        text2Color: 'gold',
+        text2MaxWidth: '458px',
+        text3: 'Вот так. Вместо банального «останься на кефир» — «останься навсегда и умри без шлема, но с душой». Нормальные отношения начинаются с цветов. Эти — с отказа от кислорода.',
+        text3X: '510px',
+        text3Y: '545.4px',
+        text3Color: 'mistyrose',
+        text3MaxWidth: '488px',
+      },
+      {
+        x: 760,
+        y: 545,
+        previewX: -221,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг9.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/птицы.jpg',
+        text1: 'Вы зациклились на загадочных фразах инопланетянина и не выберетесь из них ещё долго.',
+        text1X: '54px',
+        text1Y: '268px',
+        text1Color: 'mistyrose',
+        text1MaxWidth: '508px',
+      },
+      {
+        x: 1042,
+        y: 541,
+        previewX: -221,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг14.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/плачь.jpg',
+        text1: 'Космонавт остался один. Он сидел, обняв колени, взгляд потерянно скользил по пустоте вокруг. В голове крутились мысли: что значит «остаться здесь»? Снять шлем — значит принять эту странную планету, забыть о доме, о Земле… И, возможно, о себе прежнем. В груди что-то тяжело сжималось, но внутри было и странное тепло — словно оттого, что кто-то поверил в него настолько, что готов был пожертвовать всем ради этой связи. Космонавт глубоко вдохнул через шлем и задумался: а может, настоящее дыхание начинается там, где заканчивается кислород?',
+        text1X: '871px',
+        text1Y: '88px',
+        text1Color: 'mistyrose',
+        text1MaxWidth: '578px',
+      },
+      {
+        x: 1234,
+        y: 427,
+        previewX: -221,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг7.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/двое.jpg',
+        text1: 'Его коллеги были обеспокоены состоянием товарища и пытались помочь ему, словно местные психологи. И вот, вместо того чтобы молчать и хранить тайны Вселенной, наш герой вдруг решил, что пришло время раскрыть секрет — существует инопланетянин. Он даже не подумал, что эта фраза заставит коллег собрать оружие и отправиться на поиски желтого друга. Но, честно говоря, кто бы не хотел немного адреналина после нескольких месяцев в космосе?',
+        text1X: '84px',
+        text1Y: '18px',
+        text1Color: 'mistyrose',
+        text1MaxWidth: '908px',
+      },
+      {
+        x: 1358,
+        y: 313,
+        previewX: -221,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг5.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/пусто.jpg',
+        text1: 'Космонавт вернулся на их привычное место встречи — тот самый выступ камня у края кратера. Всё вокруг было точно таким же: пыль, скалы и бледный свет звёзд. Но ЕГО там уже не было. Инопланетянин узнал о предательстве и ушёл. Он знает, что его ищут, и понимает, что будет, если его найдут. В этот момент дыхание космонавта учащается, а взгляд метается по безжизненному пейзажу. Может, это всё был сон? Или он просто сошёл с ума за эти месяцы в космосе?',
+        text1X: '610px',
+        text1Y: '68px',
+        text1Color: 'mistyrose',
+        text1MaxWidth: '778px',
+      },
+      {
+        x: 1378,
+        y: 190,
+        previewX: -221,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг13.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/небобо.jpg',
+        text1: 'С каждым выдохом циферблат на баллоне мигал всё громче — 20%, 10%, 5%… Космонавт судорожно вдыхал редкий кислород, его сердце грохотало так, что казалось, сейчас вырвется из груди. Зрение мутнело, приборы в шлеме пульсировали красными предупреждениями, а ноги отказывались держать вес. Он опёрся коленом о землю, последние силы таяли, и в груди вздрагивал страх. И вот мир растворился в тишине — вдох… и сознание отключилось.',
+        text1X: '290px',
+        text1Y: '148px',
+        text1Color: 'mistyrose',
+        text1MaxWidth: '958px',
+      },
+      {
+        x: 1174,
+        y: 162,
+        previewX: -221,
+        previewY: -110,
+        preview: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/круг10.png',
+        bg: 'https://raw.githubusercontent.com/lima4ka/Tramp-Weather-Game/main/конец.jpg',
+        text1: 'Космонавт очнулся в тишине кратера. Первый вдох — и кислород казался невероятно свежим. Он взглянул на руки и замер: пальцев не было, вместо них — упругие мягкие лапы, кошачьи. Рядом с ним сидел тот же самый жёлтый кот. Возможно, в какой-то из своих девяти жизней у них точно бы что-то получилось, если бы он не был женат на Лерии.',
+        text1X: '180px',
+        text1Y: '18px',
+        text1Color: 'mistyrose',
+        text1MaxWidth: '1118px',
+      },
+    ];
+
+    const mapInner = document.getElementById('mapInner');
+
+    function placeScenes() {
+      mapInner.innerHTML = '';
+      scenes.forEach((scene, idx) => {
+        const container = document.createElement('div');
+        container.className = 'scene-container';
+        container.style.left = scene.x + 'px';
+        container.style.top = scene.y + 'px';
+
+        const btn = document.createElement('div');
+        btn.className = 'scene-button';
+
+        const preview = document.createElement('div');
+        preview.className = 'preview';
+        preview.style.left = scene.previewX + 'px';
+        preview.style.top = scene.previewY + 'px';
+        preview.style.backgroundImage = `url(${scene.preview})`;
+
+        container.append(preview, btn);
+        mapInner.append(container);
+
+        btn.onmouseenter = () => preview.classList.add('show');
+        btn.onmouseleave = () => preview.classList.remove('show');
+
+        btn.onclick = () => {
+          sceneBg.style.backgroundImage = `url(${scene.bg})`;
+
+          // сброс всех изображений
+          document.querySelectorAll('.scene-image')
+            .forEach(img => {
+              img.classList.remove('show', 'fly', 'glow');
+              img.style.left = img.style.top = '';
+            });
+
+          // анимации для idx===0
+          if (idx === 0) {
+            document.getElementById('img1').classList.add('show');
+            void document.getElementById('img2').offsetWidth;
+            document.getElementById('img2').classList.add('fly');
+            setTimeout(() => document.getElementById('img3').classList.add('glow'), 300);
+            document.getElementById('img4').classList.add('show');
+          }
+
+          // новые астроны для idx===1
+          if (idx === 1) {
+            [['img5', '0%', '0%'],
+            ['img6', '0%', '0%'],
+            ['img7', '-9%', '10%'],
+            ['img8', '-12%', '0%'],
+            ['img9', '-8%', '0%']
+            ].forEach(([id, left, top]) => {
+              const el = document.getElementById(id);
+              el.style.left = left;
+              el.style.top = top;
+              el.classList.add('show');
+            });
+          }
+
+          if (idx === 2) {
+            const orb = document.getElementById('img10');
+            // задаём положение (оно уже прописано в css как центр)
+            orb.classList.add('show');
+          }
+
+
+          // текст
+          sceneText.style.left = scene.text1X || '0px';
+          sceneText.style.top = scene.text1Y || '0px';
+          sceneText.style.maxWidth = scene.text1MaxWidth || 'none';
+          sceneText.style.color = scene.text1Color || '#ffffff'; // <== ДОБАВЛЕНО
+          typeText(sceneText, scene.text1 || '');
+
+          sceneText1.style.left = scene.text2X || '0px';
+          sceneText1.style.top = scene.text2Y || '0px';
+          sceneText1.style.maxWidth = scene.text2MaxWidth || 'none';
+          sceneText1.style.color = scene.text2Color || '#ffffff'; // <== ДОБАВЛЕНО
+          typeText(sceneText1, scene.text2 || '');
+
+          sceneText2.style.left = scene.text3X || '0px';
+          sceneText2.style.top = scene.text3Y || '0px';
+          sceneText2.style.maxWidth = scene.text3MaxWidth || 'none';
+          sceneText2.style.color = scene.text3Color || '#ffffff'; // <== ДОБАВЛЕНО
+          typeText(sceneText2, scene.text3 || '');
+
+          sceneText3.style.left = scene.text4X || '0px';
+          sceneText3.style.top = scene.text4Y || '0px';
+          sceneText3.style.maxWidth = scene.text4MaxWidth || 'none';
+          sceneText3.style.color = scene.text4Color || '#ffffff'; // <== ДОБАВЛЕНО
+          typeText(sceneText3, scene.text4 || '');
+
+          sceneText4.style.left = scene.text5X || '0px';
+          sceneText4.style.top = scene.text5Y || '0px';
+          sceneText4.style.maxWidth = scene.text5MaxWidth || 'none';
+          sceneText4.style.color = scene.text5Color || '#ffffff'; // <== ДОБАВЛЕНО
+          typeText(sceneText4, scene.text5 || '');
+
+          sceneText5.style.left = scene.text6X || '0px';
+          sceneText5.style.top = scene.text6Y || '0px';
+          sceneText5.style.maxWidth = scene.text6MaxWidth || 'none';
+          sceneText5.style.color = scene.text6Color || '#ffffff'; // <== ДОБАВЛЕНО
+          typeText(sceneText5, scene.text6 || '');
+
+          sceneModal.classList.add('show');
+        };
+      });
+    }
+
+
+
+    window.addEventListener('load', placeScenes);
+    window.addEventListener('resize', placeScenes);
+
+    // typing
+    const typingIntervals = new Map();
+    function typeText(elem, text, speed = 5) {
+      if (typingIntervals.has(elem)) clearTimeout(typingIntervals.get(elem));
+      elem.textContent = '';
+      let i = 0, skip = false;
+      elem.skipTyping = () => skip = true;
+      (function next() {
+        if (skip) { elem.textContent = text; return; }
+        if (i < text.length) {
+          elem.textContent += text[i++];
+          typingIntervals.set(elem, setTimeout(next, speed));
+        }
+      })();
+    }
+
+    // закрытие
+    sceneModal.onclick = () => {
+      sceneModal.classList.remove('show');
+      sceneText.textContent = '';
+      sceneText1.textContent = '';
+      document.querySelectorAll('.scene-image').forEach(img => {
+        img.classList.remove('show', 'fly', 'glow');
+        img.style.left = img.style.top = '';
+      });
+    };
+
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        sceneText.skipTyping && sceneText.skipTyping();
+        sceneText1.skipTyping && sceneText1.skipTyping();
+      }
+    });
+
+
+  </script>
+</body>
+
+</html>
